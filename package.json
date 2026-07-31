@@ -1,0 +1,58 @@
+{
+  "name": "@tokenswim/pi",
+  "version": "0.1.0",
+  "description": "Use Tokenswim's OpenAI and xAI models in the pi coding agent with a single API key.",
+  "keywords": [
+    "pi-package",
+    "pi-coding-agent",
+    "tokenswim",
+    "llm",
+    "openai",
+    "xai"
+  ],
+  "license": "MIT",
+  "homepage": "https://tokenswim.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tokenswim-app/tokenswim-pi.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tokenswim-app/tokenswim-pi/issues"
+  },
+  "type": "module",
+  "private": false,
+  "files": [
+    "src",
+    "README.md",
+    "CONTEXT.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "bun test test/",
+    "test:drift": "TOKENSWIM_DRIFT=1 bun test test/drift/",
+    "typecheck": "tsc --noEmit",
+    "check": "bun run typecheck && bun run test",
+    "smoke": "bun run test/smoke.ts",
+    "ext:install": "./ext.sh install",
+    "ext:uninstall": "./ext.sh uninstall",
+    "ext:status": "./ext.sh status"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "^0.83.0",
+    "@earendil-works/pi-coding-agent": "^0.83.0",
+    "@types/bun": "latest",
+    "typescript": "^7.0.2"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  }
+}
