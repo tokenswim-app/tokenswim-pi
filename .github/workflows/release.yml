@@ -1,0 +1,68 @@
+name: release
+
+# Tag to release: `git tag v0.1.0 && git push origin v0.1.0`.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # create the GitHub Release
+  id-token: write # npm provenance
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # release notes are generated from history
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # npm does the publishing: `bun publish` does not support provenance, and
+      # provenance is what lets consumers verify the tarball came from this tag.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - run: bun install --frozen-lockfile
+
+      # A tag is not a promise that the code is good. Run the same gate as CI
+      # before anything is published, because npm versions cannot be unpublished
+      # after 72 hours.
+      - run: bun run check
+
+      # Guard against tagging one version and shipping another — the two are
+      # edited in different files and drift silently.
+      - name: Check the tag matches package.json
+        run: |
+          tagged="${GITHUB_REF_NAME#v}"
+          packaged="$(node -p 'require("./package.json").version')"
+          if [ "$tagged" != "$packaged" ]; then
+            echo "Tag $GITHUB_REF_NAME says $tagged but package.json says $packaged." >&2
+            exit 1
+          fi
+          echo "Releasing $packaged"
+
+      # A prerelease must not become the default install. `v0.2.0-rc.1`
+      # publishes under `next`; only a plain version takes `latest`.
+      - name: Publish to npm
+        run: |
+          case "$GITHUB_REF_NAME" in
+            *-*) npm publish --provenance --access public --tag next ;;
+            *)   npm publish --provenance --access public ;;
+          esac
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create the GitHub Release
+        run: |
+          case "$GITHUB_REF_NAME" in
+            *-*) gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag --prerelease ;;
+            *)   gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag ;;
+          esac
+        env:
+          GH_TOKEN: ${{ github.token }}
