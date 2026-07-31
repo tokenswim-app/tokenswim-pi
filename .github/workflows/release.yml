@@ -30,6 +30,33 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      # Fail on credentials before spending a build, and before `npm publish`
+      # signs a provenance statement into the public transparency log. npm
+      # answers 404 — not 403 — when the token cannot write to the scope, so
+      # the error at publish time does not say what is wrong. Say it here.
+      - name: Check npm credentials
+        run: |
+          if ! who="$(npm whoami 2>&1)"; then
+            echo "NPM_TOKEN did not authenticate: $who" >&2
+            echo "Set the NPM_TOKEN repository secret to a token with publish rights." >&2
+            exit 1
+          fi
+          echo "Authenticated as $who"
+          scope="$(node -p 'require("./package.json").name.split("/")[0]')"
+          case "$scope" in
+            @*)
+              org="${scope#@}"
+              if ! npm org ls "$org" >/dev/null 2>&1 && [ "$who" != "$org" ]; then
+                echo "Cannot publish under $scope: it is neither an org $who belongs to nor $who's own scope." >&2
+                echo "Create the '$org' org on npmjs.com and give the token org-wide write access." >&2
+                echo "Note: a granular token limited to selected packages cannot create a new package." >&2
+                exit 1
+              fi
+              ;;
+          esac
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       # A tag is not a promise that the code is good. Run the same gate as CI
       # before anything is published, because npm versions cannot be unpublished
       # after 72 hours.
