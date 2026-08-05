@@ -13,7 +13,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # release notes are generated from history
 
@@ -23,7 +23,7 @@ jobs:
 
       # npm does the publishing: `bun publish` does not support provenance, and
       # provenance is what lets consumers verify the tarball came from this tag.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
