@@ -34,12 +34,23 @@ export function model(id: string): Model<Api> {
 	return found;
 }
 
-/** Drive the registered provider through pi's models runtime, as a session does. */
-export function runtime() {
+/**
+ * Drive the registered provider through pi's models runtime, as a session does.
+ *
+ * `environment` stands in for the ambient environment, so a test names the
+ * variables it depends on instead of mutating the real one. Passing it also
+ * seals the suite off from whatever the developer happens to have exported.
+ * Key Verification is the exception — see `standInGateway`.
+ */
+export function runtime(environment: Record<string, string> = {}) {
 	const credentials = new InMemoryCredentialStore();
 	const models = createModels({
 		credentials,
 		modelsStore: new InMemoryModelsStore(),
+		authContext: {
+			env: async (name) => environment[name],
+			fileExists: async () => false,
+		},
 	});
 	models.setProvider(registeredProvider());
 	return { models, credentials };
@@ -72,6 +83,10 @@ export async function storedKey(credentials: InMemoryCredentialStore) {
  * Setting the address is the point, not a side effect: the returned server is
  * only reachable through it. Callers stop the server; `afterEach` clears the
  * variable.
+ *
+ * The real variable, not `runtime`'s stand-in environment: Key Verification
+ * runs inside `login`, which reads `process.env` directly because
+ * `AuthInteraction` carries no auth context to read from.
  */
 export function standInGateway(handler: (request: Request) => Response) {
 	const server = Bun.serve({ port: 0, fetch: handler });
