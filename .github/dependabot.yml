@@ -1,0 +1,32 @@
+version: 2
+
+updates:
+  # Dependabot reads the text `bun.lock`, so `bun`, not `npm`.
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+    groups:
+      # pi-ai and pi-coding-agent are one release train: src/index.ts imports
+      # its types from pi-ai and its `ExtensionAPI` from pi-coding-agent.
+      # Bumped separately, a PR would typecheck a version pair that pi never
+      # shipped together — so they move in one PR, majors included.
+      pi:
+        patterns: ["@earendil-works/*"]
+      # Everything else, minor and patch, in one PR. A major lands on its own
+      # because it needs reading, not just a green check.
+      dev:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]
