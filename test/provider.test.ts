@@ -11,8 +11,10 @@ import {
 	storeKey,
 } from "./harness.ts";
 
+// Only the address survives as a real variable, and only because Key
+// Verification reads it from `process.env`. Everything else names its
+// environment through `runtime`.
 afterEach(() => {
-	delete process.env.TOKENSWIM_API_KEY;
 	delete process.env.TOKENSWIM_BASE_URL;
 });
 
@@ -94,8 +96,9 @@ test("points requests at the public gateway by default", async () => {
 });
 
 test("honours a gateway address from the environment", async () => {
-	process.env.TOKENSWIM_BASE_URL = "http://localhost:3000/v1";
-	const { models, credentials } = runtime();
+	const { models, credentials } = runtime({
+		TOKENSWIM_BASE_URL: "http://localhost:3000/v1",
+	});
 	await storeKey(credentials, "sk-stored");
 	const resolved = await models.getAuth("tokenswim");
 	expect(resolved?.auth.baseUrl).toBe("http://localhost:3000/v1");
@@ -104,8 +107,9 @@ test("honours a gateway address from the environment", async () => {
 // One machine can hold keys for more than one gateway, so an address pinned on
 // the credential has to beat the ambient one rather than be silently dropped.
 test("prefers a gateway address pinned on the stored credential", async () => {
-	process.env.TOKENSWIM_BASE_URL = "http://from-the-environment/v1";
-	const { models, credentials } = runtime();
+	const { models, credentials } = runtime({
+		TOKENSWIM_BASE_URL: "http://from-the-environment/v1",
+	});
 	await storeCredential(credentials, {
 		type: "api_key",
 		key: "sk-stored",
@@ -186,15 +190,15 @@ test("presents the API key in an Authorization: Bearer header when verifying", a
 });
 
 test("falls back to the environment variable when no API key is stored", async () => {
-	process.env.TOKENSWIM_API_KEY = "sk-from-env";
-	const { models } = runtime();
+	const { models } = runtime({ TOKENSWIM_API_KEY: "sk-from-env" });
 	const resolved = await models.getAuth("tokenswim");
 	expect(resolved?.auth.apiKey).toBe("sk-from-env");
 });
 
 test("prefers a stored API key over the environment variable", async () => {
-	process.env.TOKENSWIM_API_KEY = "sk-from-env";
-	const { models, credentials } = runtime();
+	const { models, credentials } = runtime({
+		TOKENSWIM_API_KEY: "sk-from-env",
+	});
 	await storeKey(credentials, "sk-stored");
 	const resolved = await models.getAuth("tokenswim");
 	expect(resolved?.auth.apiKey).toBe("sk-stored");
