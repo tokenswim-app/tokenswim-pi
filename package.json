@@ -38,8 +38,8 @@
     "ext:status": "./ext.sh status"
   },
   "devDependencies": {
-    "@earendil-works/pi-ai": "^0.83.0",
-    "@earendil-works/pi-coding-agent": "^0.83.0",
+    "@earendil-works/pi-ai": "^0.84.1",
+    "@earendil-works/pi-coding-agent": "^0.84.1",
     "@types/bun": "latest",
     "typescript": "^7.0.2"
   },
