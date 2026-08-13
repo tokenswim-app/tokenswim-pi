@@ -32,6 +32,7 @@ test("advertises every model Tokenswim serves, all speaking OpenAI Responses", (
 		"gpt-5.6-sol",
 		"gpt-5.6-terra",
 		"grok-4.5",
+		"grok-4.6",
 	]);
 	for (const entry of models) {
 		expect(entry.api).toBe("openai-responses");
@@ -45,8 +46,10 @@ test("records each model's real context window and output cap", () => {
 		expect(model(id).contextWindow).toBe(272_000);
 		expect(model(id).maxTokens).toBe(128_000);
 	}
-	expect(model("grok-4.5").contextWindow).toBe(500_000);
-	expect(model("grok-4.5").maxTokens).toBe(500_000);
+	for (const id of ["grok-4.5", "grok-4.6"]) {
+		expect(model(id).contextWindow).toBe(500_000);
+		expect(model(id).maxTokens).toBe(500_000);
+	}
 });
 
 // USD per 1M tokens, as published at https://tokenswim.app/pricing — deliberately
@@ -57,6 +60,7 @@ test("prices every model at Tokenswim's rates", () => {
 	expect(model("gpt-5.6-sol").cost).toEqual({ input: 2.5, output: 15, cacheRead: 0.25, cacheWrite: 2.5 });
 	expect(model("gpt-5.6-terra").cost).toEqual({ input: 1, output: 6, cacheRead: 0.125, cacheWrite: 1 });
 	expect(model("grok-4.5").cost).toEqual({ input: 1, output: 3, cacheRead: 0.15, cacheWrite: 1 });
+	expect(model("grok-4.6").cost).toEqual({ input: 1, output: 3, cacheRead: 0.25, cacheWrite: 1 });
 });
 
 test("offers only the thinking levels each model can serve", () => {
@@ -68,7 +72,9 @@ test("offers only the thinking levels each model can serve", () => {
 			"off", "minimal", "low", "medium", "high", "xhigh", "max",
 		]);
 	}
-	expect(getSupportedThinkingLevels(model("grok-4.5"))).toEqual(["low", "medium", "high"]);
+	for (const id of ["grok-4.5", "grok-4.6"]) {
+		expect(getSupportedThinkingLevels(model(id))).toEqual(["low", "medium", "high"]);
+	}
 });
 
 // pi does not auto-detect these on the Responses path; whatever is left unset
@@ -82,9 +88,11 @@ test("declares the compatibility flags each model needs", () => {
 	}
 	// Long cache retention is unavailable here; left unset pi defaults it on and
 	// sends a retention hint this model does not take.
-	expect(model("grok-4.5").compat).toMatchObject({
-		supportsLongCacheRetention: false,
-	});
+	for (const id of ["grok-4.5", "grok-4.6"]) {
+		expect(model(id).compat).toMatchObject({
+			supportsLongCacheRetention: false,
+		});
+	}
 });
 
 test("points requests at the public gateway by default", async () => {
