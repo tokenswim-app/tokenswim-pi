@@ -81,4 +81,14 @@ export const MODELS: Model<"openai-responses">[] = [
 		contextWindow: 500_000,
 		maxTokens: 500_000,
 	},
+	{
+		...SHARED,
+		id: "grok-4.6",
+		name: "Grok 4.6",
+		thinkingLevelMap: GROK_LEVELS,
+		compat: GROK_COMPAT,
+		cost: { input: 1, output: 3, cacheRead: 0.25, cacheWrite: 1 },
+		contextWindow: 500_000,
+		maxTokens: 500_000,
+	},
 ];
