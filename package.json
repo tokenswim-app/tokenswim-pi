@@ -1,6 +1,6 @@
 {
   "name": "@tokenswim/pi",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Use Tokenswim's OpenAI and xAI models in the pi coding agent with a single API key.",
   "keywords": [
     "pi-package",
