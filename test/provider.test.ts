@@ -31,6 +31,9 @@ test("advertises every model Tokenswim serves, all speaking OpenAI Responses", (
 		"gpt-5.6-luna",
 		"gpt-5.6-sol",
 		"gpt-5.6-terra",
+		"gpt-6-astra",
+		"gpt-6-luna",
+		"gpt-6-sol",
 		"grok-4.5",
 		"grok-4.6",
 	]);
@@ -42,7 +45,7 @@ test("advertises every model Tokenswim serves, all speaking OpenAI Responses", (
 // Context windows and output caps are pi's own published figures for these
 // models — pi drives auto-compaction off contextWindow, so they are not cosmetic.
 test("records each model's real context window and output cap", () => {
-	for (const id of ["gpt-5.5", "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra"]) {
+	for (const id of ["gpt-5.5", "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-6-astra", "gpt-6-luna", "gpt-6-sol"]) {
 		expect(model(id).contextWindow).toBe(272_000);
 		expect(model(id).maxTokens).toBe(128_000);
 	}
@@ -55,15 +58,21 @@ test("records each model's real context window and output cap", () => {
 // USD per 1M tokens, as published at https://tokenswim.app/pricing — deliberately
 // not the upstream vendors' list prices, which pi's built-in catalogs carry.
 test("prices every model at Tokenswim's rates", () => {
-	expect(model("gpt-5.5").cost).toEqual({ input: 2.5, output: 15, cacheRead: 0.25, cacheWrite: 2.5 });
-	expect(model("gpt-5.6-luna").cost).toEqual({ input: 0.1, output: 0.6, cacheRead: 0.01, cacheWrite: 0.1 });
-	expect(model("gpt-5.6-sol").cost).toEqual({ input: 2.5, output: 15, cacheRead: 0.25, cacheWrite: 2.5 });
-	expect(model("gpt-5.6-terra").cost).toEqual({ input: 1, output: 6, cacheRead: 0.125, cacheWrite: 1 });
-	expect(model("grok-4.5").cost).toEqual({ input: 1, output: 3, cacheRead: 0.15, cacheWrite: 1 });
-	expect(model("grok-4.6").cost).toEqual({ input: 1, output: 3, cacheRead: 0.25, cacheWrite: 1 });
+	expect(model("gpt-5.5").cost).toEqual({ input: 0.5, output: 3, cacheRead: 0.1, cacheWrite: 0.5 });
+	expect(model("gpt-5.6-luna").cost).toEqual({ input: 0.1, output: 0.36, cacheRead: 0.02, cacheWrite: 0.1 });
+	expect(model("gpt-5.6-sol").cost).toEqual({ input: 0.4, output: 2, cacheRead: 0.08, cacheWrite: 0.4 });
+	expect(model("gpt-5.6-terra").cost).toEqual({ input: 0.2, output: 1.2, cacheRead: 0.04, cacheWrite: 0.2 });
+	expect(model("gpt-6-astra").cost).toEqual({ input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1 });
+	expect(model("gpt-6-luna").cost).toEqual({ input: 0.1, output: 0.18, cacheRead: 0.01, cacheWrite: 0.1 });
+	expect(model("gpt-6-sol").cost).toEqual({ input: 0.2, output: 1, cacheRead: 0.08, cacheWrite: 0.2 });
+	expect(model("grok-4.5").cost).toEqual({ input: 0.2, output: 0.6, cacheRead: 0.03, cacheWrite: 0.2 });
+	expect(model("grok-4.6").cost).toEqual({ input: 0.2, output: 0.6, cacheRead: 0.05, cacheWrite: 0.2 });
 });
 
 test("offers only the thinking levels each model can serve", () => {
+	for (const id of ["gpt-6-astra", "gpt-6-luna", "gpt-6-sol"]) {
+		expect(getSupportedThinkingLevels(model(id))).toEqual(["low", "medium", "high", "xhigh", "max"]);
+	}
 	expect(getSupportedThinkingLevels(model("gpt-5.5"))).toEqual([
 		"off", "minimal", "low", "medium", "high", "xhigh",
 	]);
@@ -80,7 +89,7 @@ test("offers only the thinking levels each model can serve", () => {
 // pi does not auto-detect these on the Responses path; whatever is left unset
 // takes pi's default, which is wrong for these models in both directions.
 test("declares the compatibility flags each model needs", () => {
-	for (const id of ["gpt-5.5", "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra"]) {
+	for (const id of ["gpt-5.5", "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-6-astra", "gpt-6-luna", "gpt-6-sol"]) {
 		expect(model(id).compat).toMatchObject({
 			supportsToolSearch: true,
 			supportsOpenAIGrammarTools: true,
