@@ -19,6 +19,7 @@ const SHARED = {
 // level pi would otherwise offer.
 const GPT_LEVELS = { minimal: "low", xhigh: "xhigh" } as const;
 const GPT_LEVELS_WITH_MAX = { ...GPT_LEVELS, max: "max" } as const;
+const GPT_6_LEVELS = { ...GPT_LEVELS_WITH_MAX, off: null, minimal: null } as const;
 const GPT_COMPAT = {
 	supportsToolSearch: true,
 	supportsOpenAIGrammarTools: true,
@@ -75,7 +76,7 @@ export const MODELS: Model<"openai-responses">[] = [
 		...SHARED,
 		id: "gpt-6-astra",
 		name: "GPT-6 Astra",
-		thinkingLevelMap: { ...GPT_LEVELS_WITH_MAX, off: null, minimal: null },
+		thinkingLevelMap: GPT_6_LEVELS,
 		compat: GPT_COMPAT,
 		cost: { input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1 },
 	},
@@ -83,7 +84,7 @@ export const MODELS: Model<"openai-responses">[] = [
 		...SHARED,
 		id: "gpt-6-luna",
 		name: "GPT-6 Luna",
-		thinkingLevelMap: { ...GPT_LEVELS_WITH_MAX, off: null, minimal: null },
+		thinkingLevelMap: GPT_6_LEVELS,
 		compat: GPT_COMPAT,
 		cost: { input: 0.1, output: 0.18, cacheRead: 0.01, cacheWrite: 0.1 },
 	},
@@ -91,9 +92,17 @@ export const MODELS: Model<"openai-responses">[] = [
 		...SHARED,
 		id: "gpt-6-sol",
 		name: "GPT-6 Sol",
-		thinkingLevelMap: { ...GPT_LEVELS_WITH_MAX, off: null, minimal: null },
+		thinkingLevelMap: GPT_6_LEVELS,
 		compat: GPT_COMPAT,
 		cost: { input: 0.2, output: 1, cacheRead: 0.08, cacheWrite: 0.2 },
+	},
+	{
+		...SHARED,
+		id: "gpt-6.1-sol",
+		name: "GPT-6.1 Sol",
+		thinkingLevelMap: GPT_6_LEVELS,
+		compat: GPT_COMPAT,
+		cost: { input: 0.2, output: 1, cacheRead: 0.1, cacheWrite: 0.2 },
 	},
 	{
 		...SHARED,

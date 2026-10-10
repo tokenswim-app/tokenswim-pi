@@ -3,6 +3,12 @@
 Use [Tokenswim](https://tokenswim.app)'s models in the
 [pi coding agent](https://pi.dev). One API key, no per-vendor accounts.
 
+Supports pi 0.87.1 through 1.x; development checks use pi 1.1.0. The extension
+uses pi's native provider API and built-in OpenAI Responses implementation.
+
+The Model Catalog includes GPT-5.5, GPT-5.6 Luna/Sol/Terra, GPT-6 Astra/Luna/Sol,
+GPT-6.1 Sol, and Grok 4.5/4.6, with [Tokenswim's published prices](https://tokenswim.app/pricing).
+
 ## Install
 
 ```bash
@@ -67,7 +73,8 @@ live in the next pi session — `/reload` picks them up without restarting.
 To send one real request (spends balance):
 
 ```bash
-bun run smoke              # gpt-5.6-luna, the cheapest model
+bun run smoke              # gpt-6-luna, the cheapest model
+bun run smoke gpt-6.1-sol
 bun run smoke grok-4.5
 ```
 

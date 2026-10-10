@@ -34,6 +34,7 @@ test("advertises every model Tokenswim serves, all speaking OpenAI Responses", (
 		"gpt-6-astra",
 		"gpt-6-luna",
 		"gpt-6-sol",
+		"gpt-6.1-sol",
 		"grok-4.5",
 		"grok-4.6",
 	]);
@@ -45,7 +46,7 @@ test("advertises every model Tokenswim serves, all speaking OpenAI Responses", (
 // Context windows and output caps are pi's own published figures for these
 // models — pi drives auto-compaction off contextWindow, so they are not cosmetic.
 test("records each model's real context window and output cap", () => {
-	for (const id of ["gpt-5.5", "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-6-astra", "gpt-6-luna", "gpt-6-sol"]) {
+	for (const id of ["gpt-5.5", "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-6-astra", "gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol"]) {
 		expect(model(id).contextWindow).toBe(272_000);
 		expect(model(id).maxTokens).toBe(128_000);
 	}
@@ -65,12 +66,13 @@ test("prices every model at Tokenswim's rates", () => {
 	expect(model("gpt-6-astra").cost).toEqual({ input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1 });
 	expect(model("gpt-6-luna").cost).toEqual({ input: 0.1, output: 0.18, cacheRead: 0.01, cacheWrite: 0.1 });
 	expect(model("gpt-6-sol").cost).toEqual({ input: 0.2, output: 1, cacheRead: 0.08, cacheWrite: 0.2 });
+	expect(model("gpt-6.1-sol").cost).toEqual({ input: 0.2, output: 1, cacheRead: 0.1, cacheWrite: 0.2 });
 	expect(model("grok-4.5").cost).toEqual({ input: 0.2, output: 0.6, cacheRead: 0.03, cacheWrite: 0.2 });
 	expect(model("grok-4.6").cost).toEqual({ input: 0.2, output: 0.6, cacheRead: 0.05, cacheWrite: 0.2 });
 });
 
 test("offers only the thinking levels each model can serve", () => {
-	for (const id of ["gpt-6-astra", "gpt-6-luna", "gpt-6-sol"]) {
+	for (const id of ["gpt-6-astra", "gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol"]) {
 		expect(getSupportedThinkingLevels(model(id))).toEqual(["low", "medium", "high", "xhigh", "max"]);
 	}
 	expect(getSupportedThinkingLevels(model("gpt-5.5"))).toEqual([
@@ -89,7 +91,7 @@ test("offers only the thinking levels each model can serve", () => {
 // pi does not auto-detect these on the Responses path; whatever is left unset
 // takes pi's default, which is wrong for these models in both directions.
 test("declares the compatibility flags each model needs", () => {
-	for (const id of ["gpt-5.5", "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-6-astra", "gpt-6-luna", "gpt-6-sol"]) {
+	for (const id of ["gpt-5.5", "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-6-astra", "gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol"]) {
 		expect(model(id).compat).toMatchObject({
 			supportsToolSearch: true,
 			supportsOpenAIGrammarTools: true,
@@ -110,6 +112,71 @@ test("points requests at the public gateway by default", async () => {
 	const resolved = await models.getAuth("tokenswim");
 	expect(resolved?.auth.apiKey).toBe("sk-stored");
 	expect(resolved?.auth.baseUrl).toBe("https://tokenswim.app/v1");
+});
+
+test("streams GPT-6.1 Sol through pi's runtime and accounts for Tokenswim's prices", async () => {
+	const requests: { path: string; authorization: string | null; body: unknown }[] = [];
+	const item = {
+		id: "msg_test",
+		type: "message",
+		role: "assistant",
+		status: "completed",
+		content: [{ type: "output_text", text: "stream ok", annotations: [] }],
+	};
+	const events = [
+		{ type: "response.created", response: { id: "resp_test", status: "in_progress" } },
+		{ type: "response.output_item.added", output_index: 0, item: { ...item, status: "in_progress", content: [] } },
+		{ type: "response.output_text.delta", output_index: 0, content_index: 0, item_id: item.id, delta: "stream ok" },
+		{ type: "response.output_item.done", output_index: 0, item },
+		{
+			type: "response.completed",
+			response: {
+				id: "resp_test",
+				status: "completed",
+				output: [item],
+				usage: { input_tokens: 100, input_tokens_details: { cached_tokens: 40 }, output_tokens: 20, total_tokens: 120 },
+			},
+		},
+	];
+	const server = standInGateway(async (request) => {
+		requests.push({
+			path: new URL(request.url).pathname,
+			authorization: request.headers.get("authorization"),
+			body: await request.json(),
+		});
+		return new Response(events.map((event) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`).join(""), {
+			headers: { "content-type": "text/event-stream" },
+		});
+	});
+	try {
+		const { models, credentials } = runtime();
+		await storeCredential(credentials, {
+			type: "api_key",
+			key: "sk-local-test",
+			env: { TOKENSWIM_BASE_URL: `http://localhost:${server.port}/v1` },
+		});
+		const stream = models.streamSimple(model("gpt-6.1-sol"), {
+			systemPrompt: "Be terse.",
+			messages: [{ role: "user", content: "Say stream ok", timestamp: Date.now() }],
+		}, { reasoning: "max", maxTokens: 64 });
+		const deltas: string[] = [];
+		for await (const event of stream) {
+			if (event.type === "text_delta") deltas.push(event.delta);
+		}
+		const result = await stream.result();
+		expect(result.stopReason).toBe("stop");
+		expect(deltas.join("")).toBe("stream ok");
+		expect(requests).toHaveLength(1);
+		expect(requests[0]).toMatchObject({
+			path: "/v1/responses",
+			authorization: "Bearer sk-local-test",
+			body: { model: "gpt-6.1-sol", reasoning: { effort: "max" }, max_output_tokens: 64, stream: true },
+		});
+		expect(result.usage).toMatchObject({ input: 60, output: 20, cacheRead: 40, totalTokens: 120 });
+		expect(result.usage.cost.total).toBeCloseTo(0.000036, 10);
+	} finally {
+		server.stop(true);
+	}
 });
 
 test("honours a gateway address from the environment", async () => {

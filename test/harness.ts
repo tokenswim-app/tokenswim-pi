@@ -88,7 +88,7 @@ export async function storedKey(credentials: InMemoryCredentialStore) {
  * runs inside `login`, which reads `process.env` directly because
  * `AuthInteraction` carries no auth context to read from.
  */
-export function standInGateway(handler: (request: Request) => Response) {
+export function standInGateway(handler: (request: Request) => Response | Promise<Response>) {
 	const server = Bun.serve({ port: 0, fetch: handler });
 	process.env.TOKENSWIM_BASE_URL = `http://localhost:${server.port}/v1`;
 	return server;

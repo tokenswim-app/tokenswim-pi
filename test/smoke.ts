@@ -1,7 +1,7 @@
 /**
  * Manual smoke test: one real turn through the gateway.
  *
- *   bun run smoke                # gpt-5.6-luna, the cheapest model
+ *   bun run smoke                # gpt-6-luna, the cheapest model
  *   bun run smoke grok-4.5       # or any other catalog id
  *
  * Spends real balance. Resolves the API key the way a pi session does — the key
@@ -28,7 +28,7 @@ function apiKey(): string {
 	process.exit(1);
 }
 
-const modelId = process.argv[2] ?? "gpt-5.6-luna";
+const modelId = process.argv[2] ?? "gpt-6-luna";
 
 const credentials = new InMemoryCredentialStore();
 await credentials.modify("tokenswim", async () => ({
