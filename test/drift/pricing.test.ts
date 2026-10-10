@@ -36,7 +36,9 @@ function publishedCost(offer: Offer) {
 }
 
 test.skipIf(!OPTED_IN)("catalog still matches Tokenswim's published pricing", async () => {
-	const response = await fetch("https://tokenswim.app/pricing.json");
+	const response = await fetch("https://tokenswim.app/pricing.json", {
+		signal: AbortSignal.timeout(30_000),
+	});
 	expect(response.status).toBe(200);
 	const payload = (await response.json()) as {
 		itemListElement: { item: Offer }[];
@@ -55,4 +57,4 @@ test.skipIf(!OPTED_IN)("catalog still matches Tokenswim's published pricing", as
 		// Tag with the id so a mismatch names the model instead of just the numbers.
 		expect({ id: model.id, ...model.cost }).toEqual({ id: model.id, ...expected });
 	}
-});
+}, 35_000);
