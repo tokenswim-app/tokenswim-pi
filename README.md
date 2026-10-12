@@ -7,7 +7,7 @@ Supports pi 0.87.1 through 1.x; development checks use pi 1.1.0. The extension
 uses pi's native provider API and built-in OpenAI Responses implementation.
 
 The Model Catalog includes GPT-5.5, GPT-5.6 Luna/Sol/Terra, GPT-6 Astra/Luna/Sol,
-GPT-6.1 Sol, and Grok 4.5/4.6, with [Tokenswim's published prices](https://tokenswim.app/pricing).
+GPT-6.1 Sol, and Grok 4.5/4.6/4.7, with [Tokenswim's published prices](https://tokenswim.app/pricing.json).
 
 ## Install
 

@@ -37,6 +37,7 @@ test("advertises every model Tokenswim serves, all speaking OpenAI Responses", (
 		"gpt-6.1-sol",
 		"grok-4.5",
 		"grok-4.6",
+		"grok-4.7",
 	]);
 	for (const entry of models) {
 		expect(entry.api).toBe("openai-responses");
@@ -50,7 +51,7 @@ test("records each model's real context window and output cap", () => {
 		expect(model(id).contextWindow).toBe(272_000);
 		expect(model(id).maxTokens).toBe(128_000);
 	}
-	for (const id of ["grok-4.5", "grok-4.6"]) {
+	for (const id of ["grok-4.5", "grok-4.6", "grok-4.7"]) {
 		expect(model(id).contextWindow).toBe(500_000);
 		expect(model(id).maxTokens).toBe(500_000);
 	}
@@ -59,16 +60,17 @@ test("records each model's real context window and output cap", () => {
 // USD per 1M tokens, as published at https://tokenswim.app/pricing — deliberately
 // not the upstream vendors' list prices, which pi's built-in catalogs carry.
 test("prices every model at Tokenswim's rates", () => {
-	expect(model("gpt-5.5").cost).toEqual({ input: 0.5, output: 3, cacheRead: 0.1, cacheWrite: 0.5 });
+	expect(model("gpt-5.5").cost).toEqual({ input: 1.5, output: 9, cacheRead: 0.15, cacheWrite: 1.5 });
 	expect(model("gpt-5.6-luna").cost).toEqual({ input: 0.1, output: 0.36, cacheRead: 0.02, cacheWrite: 0.1 });
-	expect(model("gpt-5.6-sol").cost).toEqual({ input: 0.4, output: 2, cacheRead: 0.08, cacheWrite: 0.4 });
-	expect(model("gpt-5.6-terra").cost).toEqual({ input: 0.2, output: 1.2, cacheRead: 0.04, cacheWrite: 0.2 });
-	expect(model("gpt-6-astra").cost).toEqual({ input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1 });
+	expect(model("gpt-5.6-sol").cost).toEqual({ input: 1.2, output: 6, cacheRead: 0.12, cacheWrite: 1.2 });
+	expect(model("gpt-5.6-terra").cost).toEqual({ input: 0.6, output: 3.6, cacheRead: 0.06, cacheWrite: 0.6 });
+	expect(model("gpt-6-astra").cost).toEqual({ input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3 });
 	expect(model("gpt-6-luna").cost).toEqual({ input: 0.1, output: 0.18, cacheRead: 0.01, cacheWrite: 0.1 });
-	expect(model("gpt-6-sol").cost).toEqual({ input: 0.2, output: 1, cacheRead: 0.08, cacheWrite: 0.2 });
-	expect(model("gpt-6.1-sol").cost).toEqual({ input: 0.2, output: 1, cacheRead: 0.1, cacheWrite: 0.2 });
-	expect(model("grok-4.5").cost).toEqual({ input: 0.2, output: 0.6, cacheRead: 0.03, cacheWrite: 0.2 });
-	expect(model("grok-4.6").cost).toEqual({ input: 0.2, output: 0.6, cacheRead: 0.05, cacheWrite: 0.2 });
+	expect(model("gpt-6-sol").cost).toEqual({ input: 0.6, output: 3, cacheRead: 0.06, cacheWrite: 0.6 });
+	expect(model("gpt-6.1-sol").cost).toEqual({ input: 0.6, output: 3, cacheRead: 0.03, cacheWrite: 0.6 });
+	expect(model("grok-4.5").cost).toEqual({ input: 0.6, output: 1.8, cacheRead: 0.09, cacheWrite: 0.6 });
+	expect(model("grok-4.6").cost).toEqual({ input: 0.6, output: 1.8, cacheRead: 0.15, cacheWrite: 0.6 });
+	expect(model("grok-4.7").cost).toEqual({ input: 0.6, output: 1.8, cacheRead: 0.15, cacheWrite: 0.6 });
 });
 
 test("offers only the thinking levels each model can serve", () => {
@@ -83,7 +85,7 @@ test("offers only the thinking levels each model can serve", () => {
 			"off", "minimal", "low", "medium", "high", "xhigh", "max",
 		]);
 	}
-	for (const id of ["grok-4.5", "grok-4.6"]) {
+	for (const id of ["grok-4.5", "grok-4.6", "grok-4.7"]) {
 		expect(getSupportedThinkingLevels(model(id))).toEqual(["low", "medium", "high"]);
 	}
 });
@@ -99,7 +101,7 @@ test("declares the compatibility flags each model needs", () => {
 	}
 	// Long cache retention is unavailable here; left unset pi defaults it on and
 	// sends a retention hint this model does not take.
-	for (const id of ["grok-4.5", "grok-4.6"]) {
+	for (const id of ["grok-4.5", "grok-4.6", "grok-4.7"]) {
 		expect(model(id).compat).toMatchObject({
 			supportsLongCacheRetention: false,
 		});
@@ -173,7 +175,7 @@ test("streams GPT-6.1 Sol through pi's runtime and accounts for Tokenswim's pric
 			body: { model: "gpt-6.1-sol", reasoning: { effort: "max" }, max_output_tokens: 64, stream: true },
 		});
 		expect(result.usage).toMatchObject({ input: 60, output: 20, cacheRead: 40, totalTokens: 120 });
-		expect(result.usage.cost.total).toBeCloseTo(0.000036, 10);
+		expect(result.usage.cost.total).toBeCloseTo(0.0000972, 10);
 	} finally {
 		server.stop(true);
 	}

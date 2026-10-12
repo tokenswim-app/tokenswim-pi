@@ -37,7 +37,7 @@ const GROK_LEVELS = {
 const GROK_COMPAT = { supportsLongCacheRetention: false } as const;
 
 // USD per 1M tokens, from Tokenswim's published pricing at
-// https://tokenswim.app/pricing. pi reports session cost from these numbers, so
+// https://tokenswim.app/pricing.json. pi reports session cost from these numbers, so
 // they are the gateway's prices, not any upstream vendor's list prices.
 export const MODELS: Model<"openai-responses">[] = [
 	{
@@ -46,7 +46,7 @@ export const MODELS: Model<"openai-responses">[] = [
 		name: "GPT-5.5",
 		thinkingLevelMap: GPT_LEVELS,
 		compat: GPT_COMPAT,
-		cost: { input: 0.5, output: 3, cacheRead: 0.1, cacheWrite: 0.5 },
+		cost: { input: 1.5, output: 9, cacheRead: 0.15, cacheWrite: 1.5 },
 	},
 	{
 		...SHARED,
@@ -62,7 +62,7 @@ export const MODELS: Model<"openai-responses">[] = [
 		name: "GPT-5.6 Sol",
 		thinkingLevelMap: GPT_LEVELS_WITH_MAX,
 		compat: GPT_COMPAT,
-		cost: { input: 0.4, output: 2, cacheRead: 0.08, cacheWrite: 0.4 },
+		cost: { input: 1.2, output: 6, cacheRead: 0.12, cacheWrite: 1.2 },
 	},
 	{
 		...SHARED,
@@ -70,7 +70,7 @@ export const MODELS: Model<"openai-responses">[] = [
 		name: "GPT-5.6 Terra",
 		thinkingLevelMap: GPT_LEVELS_WITH_MAX,
 		compat: GPT_COMPAT,
-		cost: { input: 0.2, output: 1.2, cacheRead: 0.04, cacheWrite: 0.2 },
+		cost: { input: 0.6, output: 3.6, cacheRead: 0.06, cacheWrite: 0.6 },
 	},
 	{
 		...SHARED,
@@ -78,7 +78,7 @@ export const MODELS: Model<"openai-responses">[] = [
 		name: "GPT-6 Astra",
 		thinkingLevelMap: GPT_6_LEVELS,
 		compat: GPT_COMPAT,
-		cost: { input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1 },
+		cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3 },
 	},
 	{
 		...SHARED,
@@ -94,7 +94,7 @@ export const MODELS: Model<"openai-responses">[] = [
 		name: "GPT-6 Sol",
 		thinkingLevelMap: GPT_6_LEVELS,
 		compat: GPT_COMPAT,
-		cost: { input: 0.2, output: 1, cacheRead: 0.08, cacheWrite: 0.2 },
+		cost: { input: 0.6, output: 3, cacheRead: 0.06, cacheWrite: 0.6 },
 	},
 	{
 		...SHARED,
@@ -102,7 +102,7 @@ export const MODELS: Model<"openai-responses">[] = [
 		name: "GPT-6.1 Sol",
 		thinkingLevelMap: GPT_6_LEVELS,
 		compat: GPT_COMPAT,
-		cost: { input: 0.2, output: 1, cacheRead: 0.1, cacheWrite: 0.2 },
+		cost: { input: 0.6, output: 3, cacheRead: 0.03, cacheWrite: 0.6 },
 	},
 	{
 		...SHARED,
@@ -110,7 +110,7 @@ export const MODELS: Model<"openai-responses">[] = [
 		name: "Grok 4.5",
 		thinkingLevelMap: GROK_LEVELS,
 		compat: GROK_COMPAT,
-		cost: { input: 0.2, output: 0.6, cacheRead: 0.03, cacheWrite: 0.2 },
+		cost: { input: 0.6, output: 1.8, cacheRead: 0.09, cacheWrite: 0.6 },
 		contextWindow: 500_000,
 		maxTokens: 500_000,
 	},
@@ -120,7 +120,17 @@ export const MODELS: Model<"openai-responses">[] = [
 		name: "Grok 4.6",
 		thinkingLevelMap: GROK_LEVELS,
 		compat: GROK_COMPAT,
-		cost: { input: 0.2, output: 0.6, cacheRead: 0.05, cacheWrite: 0.2 },
+		cost: { input: 0.6, output: 1.8, cacheRead: 0.15, cacheWrite: 0.6 },
+		contextWindow: 500_000,
+		maxTokens: 500_000,
+	},
+	{
+		...SHARED,
+		id: "grok-4.7",
+		name: "Grok 4.7",
+		thinkingLevelMap: GROK_LEVELS,
+		compat: GROK_COMPAT,
+		cost: { input: 0.6, output: 1.8, cacheRead: 0.15, cacheWrite: 0.6 },
 		contextWindow: 500_000,
 		maxTokens: 500_000,
 	},
