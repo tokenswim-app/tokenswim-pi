@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write # create the GitHub Release
-  id-token: write # npm provenance
+  id-token: write # npm trusted publishing and provenance
 
 jobs:
   release:
@@ -21,41 +21,20 @@ jobs:
         with:
           bun-version: latest
 
-      # npm does the publishing: `bun publish` does not support provenance, and
-      # provenance is what lets consumers verify the tarball came from this tag.
+      # npm exchanges GitHub's OIDC token for publish credentials. Configure
+      # this repository and release.yml as a trusted publisher on npmjs.com.
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      # Trusted publishing requires npm >= 11.5.1; update independently of
+      # the version bundled with Node on the runner.
+      - name: Install npm with OIDC support
+        run: npm install --global npm@11
 
       - run: bun install --frozen-lockfile
-
-      # Fail on credentials before spending a build, and before `npm publish`
-      # signs a provenance statement into the public transparency log. npm
-      # answers 404 — not 403 — when the token cannot write to the scope, so
-      # the error at publish time does not say what is wrong. Say it here.
-      - name: Check npm credentials
-        run: |
-          if ! who="$(npm whoami 2>&1)"; then
-            echo "NPM_TOKEN did not authenticate: $who" >&2
-            echo "Set the NPM_TOKEN repository secret to a token with publish rights." >&2
-            exit 1
-          fi
-          echo "Authenticated as $who"
-          scope="$(node -p 'require("./package.json").name.split("/")[0]')"
-          case "$scope" in
-            @*)
-              org="${scope#@}"
-              if ! npm org ls "$org" >/dev/null 2>&1 && [ "$who" != "$org" ]; then
-                echo "Cannot publish under $scope: it is neither an org $who belongs to nor $who's own scope." >&2
-                echo "Create the '$org' org on npmjs.com and give the token org-wide write access." >&2
-                echo "Note: a granular token limited to selected packages cannot create a new package." >&2
-                exit 1
-              fi
-              ;;
-          esac
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # A tag is not a promise that the code is good. Run the same gate as CI
       # before anything is published, because npm versions cannot be unpublished
@@ -76,14 +55,12 @@ jobs:
 
       # A prerelease must not become the default install. `v0.2.0-rc.1`
       # publishes under `next`; only a plain version takes `latest`.
-      - name: Publish to npm
+      - name: Publish to npm with OIDC
         run: |
           case "$GITHUB_REF_NAME" in
             *-*) npm publish --provenance --access public --tag next ;;
             *)   npm publish --provenance --access public ;;
           esac
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create the GitHub Release
         run: |
