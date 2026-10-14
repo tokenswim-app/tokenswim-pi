@@ -54,19 +54,20 @@ jobs:
           echo "Releasing $packaged"
 
       # A prerelease must not become the default install. `v0.2.0-rc.1`
-      # publishes under `next`; only a plain version takes `latest`.
+      # publishes under `next`; a plain version explicitly takes `latest`.
       - name: Publish to npm with OIDC
         run: |
           case "$GITHUB_REF_NAME" in
             *-*) npm publish --provenance --access public --tag next ;;
-            *)   npm publish --provenance --access public ;;
+            *)   npm publish --provenance --access public --tag latest ;;
           esac
 
+      # Stable tags also explicitly update GitHub's Latest release.
       - name: Create the GitHub Release
         run: |
           case "$GITHUB_REF_NAME" in
-            *-*) gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag --prerelease ;;
-            *)   gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag ;;
+            *-*) gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag --prerelease --latest=false ;;
+            *)   gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag --latest ;;
           esac
         env:
           GH_TOKEN: ${{ github.token }}
